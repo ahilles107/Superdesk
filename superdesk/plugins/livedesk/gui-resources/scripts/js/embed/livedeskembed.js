@@ -1539,7 +1539,7 @@ function isOnly(data,key) {
 	};
 	return (data !== undefined) && (data[key] !== undefined) && (count == 1);
 }
-
+window.livedesk.loadedTweeterScript = false;
 window.livedesk.init = function() {
     var self = this;
     var loadJQ = false;
@@ -1817,7 +1817,8 @@ window.livedesk.startLoading = function($) {
                                     }
                                 }
 								avatarString = '';
-                                if(Avatar.length > 0) {
+                                                                
+                                if(Avatar.length > 0 && author != 'twitter') {
                                     avatarString = '<figure><img src="' + Avatar + '" ></figure>';
                                 }                                
                                 switch (itemClass) {
@@ -1826,8 +1827,17 @@ window.livedesk.startLoading = function($) {
                                         returned += annotBefore;
 										returned += avatarString;
                                         returned +=  '<div class="result-content">';
-                                        returned +=     '<div class="result-text">' + content + '</div>';
-                                        returned +=     '<p class="attributes"><i class="source-icon"></i> by ' + item.get('AuthorName');
+                                        if ( author == 'twitter') {
+                                            returned += '<blockquote class="twitter-tweet"><p>' + content + '</p>&mdash; ' + Meta.from_user_name + ' (@vlad_1902) <a href="https://twitter.com/' + Meta.from_user + '/status/' + Meta.id_str + '" data-datetime="'+Meta.created_at+'"></a></blockquote>';
+                                            
+                                            if ( !window.livedesk.loadedTweeterScript ) {
+                                                returned += '<script src="//platform.twitter.com/widgets.js" charset="utf-8"></script>';
+                                                window.livedesk.loadedTweeterScript = true;
+                                            }
+                                            returned += '<script src="//platform.twitter.com/widgets.js" charset="utf-8"></script>';
+                                        } else {
+                                            returned +=     '<div class="result-text">' + content + '</div>';
+                                        }                                        returned +=     '<p class="attributes"><i class="source-icon"></i> by ' + item.get('AuthorName');
                                         returned +=         '<time>' + time + '</time>';
                                         returned +=     '</p>';
                                         returned += '</div>';
