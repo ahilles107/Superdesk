@@ -1567,7 +1567,64 @@ function isOnly(data,key) {
 	};
 	return (data !== undefined) && (data[key] !== undefined) && (count == 1);
 }
+var root = this;
+window.livedesk.loadXDRequest = function (jQuery) {
+    
+    (function( jQuery ) {
+        
+    if (root.XDomainRequest) {
+      jQuery.ajaxTransport("+*",function( s ) {
+        if ( s.crossDomain && s.async ) {
+          if ( s.timeout ) {
+            s.xdrTimeout = s.timeout;
+            delete s.timeout;
+          }
+          var xdr;
+          return {
+            send: function( _, complete ) {
+              function callback( status, statusText, responses, responseHeaders ) {
+                xdr.onload = xdr.onerror = xdr.ontimeout = jQuery.noop;
+                xdr = undefined;
+                complete( status, statusText, responses, responseHeaders );
+              }
+              xdr = new XDomainRequest();
+              if(s.dataType){
+                  var headerThroughUriParameters = "";//header_Accept=" + encodeURIComponent(s.dataType);
+                  for(i in s.headers) {
+                      headerThroughUriParameters += i +'='+encodeURIComponent(s.headers[i])+'&';
+                  }
+                  headerThroughUriParameters = headerThroughUriParameters.replace(/(\s+)?.$/, '');
+                  s.url = s.url + (s.url.indexOf("?") === -1 ? "?" : "&" ) + headerThroughUriParameters;
+              }
+              xdr.open( s.type, s.url );
+              xdr.onload = function(e1, e2) {
+                callback( 200, "OK", { text: xdr.responseText }, "Content-Type: " + xdr.contentType );
+              };
+              xdr.onerror = function(e) {
+                  //console.error(JSON.stringify(e));
+                  callback( 404, "Not Found" );
+              };
+              if ( s.xdrTimeout ) {
+                xdr.ontimeout = function() {
+                  callback( 0, "timeout" );
+                };
+                xdr.timeout = s.xdrTimeout;
+              }
+              xdr.send( ( s.hasContent && s.data ) || null );
+            },
+            abort: function() {
+              if ( xdr ) {
+                xdr.onerror = jQuery.noop();
+                xdr.abort();
+              }
+            }
+          };
+        }
+      });
+    }
+    })( jQuery );
 
+}
 
 window.livedesk.init = function() {
     
@@ -1590,6 +1647,7 @@ window.livedesk.init = function() {
     
     if (loadJQ) {
         self.loadScript('//ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js', function(){
+            self.loadXDRequest(jQuery);
             if (typeof $.gizmo == 'undefined') {
                 self.loadGizmo(giveBack$);
             } else {
@@ -1597,6 +1655,7 @@ window.livedesk.init = function() {
             }
         })
     } else {
+        self.loadXDRequest(jQuery);
         if (typeof $.gizmo == 'undefined') {
             self.loadGizmo(giveBack$);
         } else {
@@ -1633,6 +1692,7 @@ window.livedesk.preLoad = function (giveBack$) {
 };
 
 window.livedesk.startLoading = function($, _) {
+                this.loadXDRequest($);
 		var 
 		User = $.gizmo.Model.extend({}),
 /*		PostType = $.gizmo.Model.extend({}),
